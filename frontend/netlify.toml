@@ -1,6 +1,10 @@
 [build]
   publish = "dist"
   command = "npm run build"
+  
+[build.environment]
+  VITE_API_URL = "/api"
+
 
 # Proxy API requests to Render backend to bypass CORS
 [[redirects]]
