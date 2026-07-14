@@ -1,77 +1,96 @@
-# AI-Marketplace Production Setup & Razorpay Integration
-
-This repository has been fully upgraded to meet production-ready standards. It contains a complete containerization strategy, security header policies, a service diagnostic checker, and a production-grade Razorpay payment integration with server-side signature verification.
-
----
-
-## 🛠️ Production Enhancements
-
-### 1. Razorpay Integration
-Online transactions are powered by Razorpay.
-* **Backend**: Order creation returns standard Razorpay metadata. A new verification endpoint `/api/orders/verify-payment` performs server-side cryptographic verification of Razorpay signatures before updating payment statuses.
-* **Frontend**: The checkout page loads the Razorpay widget dynamically and redirects payment callbacks directly to backend verification APIs.
-* **Robust Fail-Safe**: If `RAZORPAY_KEY_ID` or `RAZORPAY_KEY_SECRET` are not set in the environment, the app gracefully falls back to a Sandbox payment simulation, allowing local development and testing to run seamlessly.
-
-### 2. Containerization (Docker & Compose)
-Multi-container orchestration setup splits the application stack into three isolated services:
-* `db`: Standard PostgreSQL database.
-* `backend`: Python Gunicorn server serving Flask routes. Runs a database connectivity check script before boot to prevent container start race conditions.
-* `frontend`: Nginx server serving the built Vite React app and proxying API endpoints, which resolves CORS issues.
-
-### 3. Security Hardening
-The backend includes security filters:
-* `X-Content-Type-Options: nosniff` (prevents MIME type sniffing).
-* `X-Frame-Options: SAMEORIGIN` (mitigates clickjacking attacks).
-* `X-XSS-Protection: 1; mode=block` (mitigates cross-site scripting).
-* `Content-Security-Policy: default-src 'none'` (enforced on JSON API payloads).
+<div align="center">
+  <h1>🛍️ Libora - AI-Powered E-Commerce Marketplace</h1>
+  <p>A modern, full-stack multi-vendor e-commerce platform featuring an AI Stylist, secure payments, and a seamless shopping experience.</p>
+</div>
 
 ---
 
-## 🚀 Getting Started
+## 🌟 Features
+
+- **Multi-Vendor Ecosystem**: Support for Admins, Sellers, and Buyers with dedicated dashboards.
+- **🤖 AI Stylist**: Integrated AI assistant to help users find the perfect outfits and products based on their preferences.
+- **Secure Payments**: Production-ready Razorpay integration with server-side signature verification.
+- **Smart Analytics**: Real-time sales data, order tracking, and fraud detection metrics for sellers.
+- **Dynamic Categories**: Deeply nested, dynamic categorization system covering Fashion, Electronics, Cosmetics, and more.
+- **Fully Responsive**: Beautiful, mobile-first UI with a custom drawer and quick search.
+
+## 💻 Tech Stack
+
+**Frontend**
+- React 19 + Vite
+- React Router DOM for SPA routing
+- Vanilla CSS + modern styling (Glassmorphism, Flexbox grids)
+- Hosted on **Netlify**
+
+**Backend**
+- Python Flask
+- SQLAlchemy + PostgreSQL (Hosted on **Neon**)
+- Gunicorn WSGI server
+- Hosted on **Render** (Free Tier)
+
+**Integrations**
+- **Razorpay** for payment processing
+- **Groq / Gemini** for AI capabilities
+- **Twilio** for SMS notifications
+
+---
+
+## 🚀 Live Demo
+
+The application is deployed live! 
+- **Frontend URL:** *[Add your Netlify link here, e.g., https://your-site.netlify.app]*
+- **Backend API:** Hosted on Render (`https://libora-ecommerce-website.onrender.com`)
+
+*Note: The backend is hosted on a free tier and may take 30-60 seconds to wake up from inactivity on the first request.*
+
+---
+
+## 🛠️ Local Development Setup
+
+If you want to run the project locally on your machine, follow these steps:
 
 ### Prerequisites
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+- Node.js & npm
+- Python 3.9+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Optional, for containerized setup)
 
-### Setup Environment
-1. Copy the template `.env.example` in the root directory to a new file named `.env`:
-   ```bash
-   cp .env.example .env
-   ```
-2. Open `.env` and fill in your credentials:
-   - Provide your `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to enable live Razorpay transactions.
-   - Set `GEMINI_API_KEY` to enable the AI Stylist feature.
-
-### Start the Services
-Run the following command to spin up the entire application stack:
+### 1. Clone the repository
 ```bash
-docker-compose up --build
+git clone https://github.com/geetanjaliwagh24/libora-ecommerce-website.git
+cd libora-ecommerce-website
 ```
-Once initialized:
-* **Frontend Application** is available at: [http://localhost:8080](http://localhost:8080)
-* **Backend Health endpoint** is available at: [http://localhost:8080/api/health](http://localhost:8080/api/health)
+
+### 2. Backend Setup
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+pip install -r requirements.txt
+```
+Create a `.env` file in the `backend` directory based on `.env.example` and add your keys (Database URL, Razorpay, Groq, etc.).
+```bash
+python run.py
+```
+
+### 3. Frontend Setup
+Open a new terminal window:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The frontend will start at `http://localhost:5173`.
 
 ---
 
-## 🔍 Verification
+## 🛡️ Security & Architecture
 
-### Running Automated Tests
-Run unit tests inside the backend directory to check application logic:
-```bash
-cd backend
-python -m unittest discover -s tests
-```
+- **CORS Handling**: Handled seamlessly via Netlify Proxy redirects in production to avoid browser origin blocks.
+- **Security Headers**: Backend enforces `X-Content-Type-Options`, `X-Frame-Options`, and `Content-Security-Policy`.
+- **Database Safety**: Sensitive environment variables are fully isolated and ignored by `.gitignore`.
 
-### Inspecting Security Headers
-Confirm security headers are active:
-```bash
-curl -I http://localhost:8080/api/health
-```
-You should see:
-```http
-HTTP/1.1 200 OK
-Server: nginx/...
-X-Content-Type-Options: nosniff
-X-Frame-Options: SAMEORIGIN
-X-XSS-Protection: 1; mode=block
-Content-Security-Policy: default-src 'none'
-```
+---
+
+<div align="center">
+  <i>Built with ❤️ for modern e-commerce.</i>
+</div>
