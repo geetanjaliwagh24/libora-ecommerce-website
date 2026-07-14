@@ -1,12 +1,15 @@
 [build]
-  # This is the directory that Netlify will deploy (Vite builds into 'dist' by default)
   publish = "dist"
-  
-  # This is the command Netlify will run to build your React app
   command = "npm run build"
 
-# This rule ensures that client-side routing (React Router) works correctly on Netlify.
-# It redirects all traffic to index.html so React can handle the route.
+# Proxy API requests to Render backend to bypass CORS
+[[redirects]]
+  from = "/api/*"
+  to = "https://libora-ecommerce-website.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Client-side routing fallback (must be after the API proxy)
 [[redirects]]
   from = "/*"
   to = "/index.html"
