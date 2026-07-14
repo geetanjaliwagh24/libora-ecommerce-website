@@ -1,0 +1,13 @@
+[build]
+  # This is the directory that Netlify will deploy (Vite builds into 'dist' by default)
+  publish = "dist"
+  
+  # This is the command Netlify will run to build your React app
+  command = "npm run build"
+
+# This rule ensures that client-side routing (React Router) works correctly on Netlify.
+# It redirects all traffic to index.html so React can handle the route.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

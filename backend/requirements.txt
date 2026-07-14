@@ -1,0 +1,12 @@
+flask
+flask-sqlalchemy
+flask-cors
+pyjwt
+werkzeug
+psycopg2-binary
+python-dotenv
+flask-limiter
+gunicorn
+razorpay
+groq
+waitress==3.0.2

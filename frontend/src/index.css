@@ -1,0 +1,395 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  /* High-Contrast Lavender & Emerald Gold Theme variables */
+  --bg-app: #F8F6FC;         /* Soft Lilac Cream */
+  --bg-surface: rgba(255, 255, 255, 0.9);
+  --bg-surface-elevated: #ffffff;
+  --surface: var(--bg-surface);
+  --surface-elevated: var(--bg-surface-elevated);
+  
+  --primary: #5c4db1;        /* Rich Royal Lavender */
+  --primary-glow: rgba(92, 77, 177, 0.17);
+  --secondary: #10b981;      /* Vibrant Emerald Green */
+  --secondary-glow: rgba(16, 185, 129, 0.18);
+  --accent: #ff9100;         /* Warm Sun Gold */
+  
+  --text-primary: #1f1a26;   /* Deep Navy Violet */
+  --text-secondary: #5c5665; /* Slate Grey */
+  --text-muted: #8e8796;     /* Muted Lilac Grey */
+  --text-light: #f8f6fc;     /* Soft Lilac White */
+  
+  --border-color: rgba(92, 77, 177, 0.14);
+  --border-color-glow: rgba(16, 185, 129, 0.28);
+  
+  --success: #10b981;
+  --success-bg: rgba(16, 185, 129, 0.13);
+  --warning: #ff9100;
+  --warning-bg: rgba(255, 145, 0, 0.13);
+  --danger: #ef5350;
+  --danger-bg: rgba(239, 83, 80, 0.1);
+  
+  /* Gradients */
+  --grad-primary: linear-gradient(135deg, #5c4db1 0%, #3e318c 100%);
+  --grad-cyber: linear-gradient(90deg, #5c4db1 0%, #10b981 100%);
+  --grad-hot: linear-gradient(135deg, #ff9100 0%, #5c4db1 100%);
+  --grad-dark: linear-gradient(180deg, #f8f6fc 0%, #f3effa 100%);
+  
+  /* Shadows & Blur */
+  --shadow-glow: 0 4px 20px rgba(92, 77, 177, 0.10);
+  --shadow-cyber: 0 4px 15px rgba(16, 185, 129, 0.15);
+  --glass-blur: blur(20px);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  
+  /* Responsive Theme Helpers */
+  --bg-input: rgba(255, 255, 255, 0.95);
+  --shadow-panel: 0 8px 32px 0 rgba(92, 77, 177, 0.05);
+  --shadow-card: 0 10px 30px rgba(92, 77, 177, 0.04);
+  
+  transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(138, 43, 226, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.5);
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+}
+
+.glass-panel:hover {
+  border-color: var(--border-color-glow);
+  box-shadow: var(--shadow-panel), 0 4px 15px rgba(92, 77, 177, 0.08);
+}
+
+/* Animated Border Glow Card */
+.cyber-card {
+  position: relative;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyber-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--secondary);
+  box-shadow: var(--shadow-cyber), var(--shadow-card);
+}
+
+/* Neon buttons */
+.btn-primary {
+  background: var(--grad-primary);
+  color: var(--text-light);
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-glow);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--secondary);
+  border: 1px solid var(--secondary);
+  padding: 11px 23px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 240, 255, 0.1);
+  box-shadow: var(--shadow-cyber);
+}
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  padding: 11px 23px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: var(--danger);
+  color: var(--text-light);
+}
+
+/* Inputs */
+.cyber-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  outline: none;
+  font-family: var(--font-sans);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyber-input:focus {
+  border-color: var(--secondary);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+/* Text glow */
+.text-glow-primary {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.text-glow-secondary {
+  color: var(--secondary);
+  text-shadow: 0 0 10px var(--secondary-glow);
+}
+
+/* Grid helper */
+.grid-container {
+  display: grid;
+  gap: 24px;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(0, 230, 118, 0.2); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(255, 179, 0, 0.2); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(255, 23, 68, 0.2); }
+.badge-info { background: rgba(0, 240, 255, 0.1); color: var(--secondary); border: 1px solid rgba(0, 240, 255, 0.2); }
+
+.mega-menu-link { 
+  text-decoration: none; 
+  color: #282c3f; 
+  font-size: 14px; 
+  padding: 6px 0; 
+  display: block; 
+  transition: all 0.2s ease; 
+} 
+
+.mega-menu-link:hover { 
+  color: #ff3f6c; 
+  font-weight: 700; 
+  transform: translateX(5px); 
+}
+
+/* Product title link */
+.product-title-link {
+  text-decoration: none;
+  color: var(--text-primary);
+  font-weight: 600;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.product-title-link:hover {
+  color: var(--secondary) !important;
+  text-shadow: 0 0 8px var(--secondary-glow);
+}
+
+.mobile-search-bar, .mobile-menu-toggle {
+  display: none;
+}
+
+/* Ensure tables are scrollable on small screens */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Global Mobile Responsiveness (Width <= 768px) */
+@media (max-width: 768px) {
+  /* 1. Navbar mobile overrides */
+  .mobile-search-bar {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+  nav {
+    height: auto !important;
+    padding: 10px 16px !important;
+  }
+  nav > div {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+  .mobile-menu-toggle {
+    display: flex !important;
+    color: var(--text-primary) !important;
+  }
+  .desktop-nav-categories,
+  .desktop-search-form,
+  .desktop-only-action {
+    display: none !important;
+  }
+  .nav-actions-container span {
+    display: none !important;
+  }
+  .nav-actions-container {
+    width: auto !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    gap: 16px !important;
+  }
+
+  /* 2. Layout Grid Stacking & Alignment */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* Adjust product pages standard grids */
+  div[style*="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))"],
+  div[style*="gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))'"],
+  div[style*="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))"] {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* Suggested / Similar product grid on detail pages */
+  div[style*="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))"],
+  div[style*="gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))'"] {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  /* Adjust product card sizes */
+  div[style*="minWidth: '180px'"] {
+    min-width: 130px !important;
+    max-width: 100% !important;
+  }
+
+  /* Adjust home/carousels to scroll beautifully */
+  div[style*="overflow-x: 'auto'"],
+  div[style*="overflowX: 'auto'"] {
+    gap: 12px !important;
+    padding-bottom: 6px !important;
+  }
+  
+  /* Main image panel size reduction */
+  div[style*="height: '450px'"],
+  div[style*="height:450px"] {
+    height: 300px !important;
+  }
+  
+  /* 3. Dashboard layouts stack sidebar and grids */
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  
+  /* Flex directions on mobile */
+  div[style*="display: flex"][style*="flex-direction: row"],
+  div[style*="display:flex"][style*="flexDirection: 'row'"] {
+    flex-direction: column !important;
+  }
+  
+  /* Profile Page forms column layout */
+  div[style*="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Adjust buttons and modals */
+  button {
+    width: 100% !important;
+  }
+  
+  /* Keep inline/small buttons compact */
+  nav button:not(.ai-stylist-fab), 
+  div[style*="display: flex"] button:not(.ai-stylist-fab),
+  div[style*="display:flex"] button:not(.ai-stylist-fab),
+  .qtyControl button:not(.ai-stylist-fab),
+  .subtotalArea button:not(.ai-stylist-fab) {
+    width: auto !important;
+  }
+  
+  button.ai-stylist-fab {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  /* AI Stylist Mobile Fixes */
+  .ai-stylist-chat-container {
+    width: 90% !important;
+    right: 5% !important;
+    left: 5% !important;
+    max-height: 70vh !important;
+    bottom: 90px !important;
+  }
+}
