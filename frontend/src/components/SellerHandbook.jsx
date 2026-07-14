@@ -24,62 +24,63 @@ export const SellerHandbook = () => {
         </section>
 
         <section>
-          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>2. Setting Up Your Store</h2>
+          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>2. Setting Up Your Store & KYC</h2>
           <p>A complete and trustworthy store profile attracts more buyers.</p>
           <ul style={{ paddingLeft: '20px' }}>
             <li><strong>Store Name & Logo:</strong> Ensure your brand name is spelled correctly and upload a high-quality logo.</li>
-            <li><strong>Store Description:</strong> Write a brief, compelling description of what you sell.</li>
+            <li><strong>KYC Verification:</strong> Submit your business documents via the dashboard to remove selling caps and gain a "Verified" badge.</li>
             <li><strong>Contact Information:</strong> Keep your customer service email and phone number up to date so buyers can reach you if needed.</li>
           </ul>
         </section>
 
         <section>
-          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>3. Managing Your Products</h2>
+          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>3. Managing Your Products, Groups & Sizes</h2>
           <p>Libora features dynamic categories (Fashion, Electronics, Cosmetics, etc.). Properly categorizing your items is crucial for visibility.</p>
-          <h3 style={{ marginTop: '15px' }}>Adding a New Product</h3>
-          <ol style={{ paddingLeft: '20px' }}>
-            <li>Go to the <strong>Products</strong> tab in your dashboard and click <strong>"Add New Product"</strong>.</li>
-            <li><strong>Product Details:</strong> Enter a clear Title, detailed Description, and the Price.</li>
-            <li><strong>Categories:</strong> Select the most accurate category and sub-category.</li>
-            <li><strong>Inventory:</strong> Input your available stock quantity.</li>
-            <li><strong>Images:</strong> Upload high-resolution images. Good images drastically increase conversion rates!</li>
-          </ol>
+          
+          <h3 style={{ marginTop: '15px' }}>Grouping Products (The "Group ID")</h3>
+          <p>If you sell the same product in multiple colors (e.g., a T-shirt in Red, Blue, and Green), you should link them together using a <strong>Group ID</strong>. When listing these products, give them all the <strong>exact same Group ID string</strong> (e.g., <code>TSHIRT-V1</code>). Libora will automatically group them on the product page, allowing buyers to seamlessly click between the color variants!</p>
+
+          <h3 style={{ marginTop: '15px' }}>Handling Sizes</h3>
+          <p>When you create a product in an apparel or footwear category, the system will automatically prompt you for sizes.</p>
+          <ul style={{ paddingLeft: '20px' }}>
+            <li><strong>Specific Sizes:</strong> Enter the stock quantity for each size (e.g., XS, S, M, L). If you don't have stock for a specific size, leave it as 0.</li>
+            <li><strong>Free Size:</strong> If the item is one-size-fits-all (like a scarf or a handbag), check the "Free Size" box and just enter the total stock.</li>
+          </ul>
+
           <h3 style={{ marginTop: '15px' }}>Editing & Deleting</h3>
           <p>You can update stock, change prices, or edit descriptions at any time from the <strong>Products</strong> list. If a product is permanently discontinued, you can delete it or mark it as inactive.</p>
         </section>
 
         <section>
-          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>4. Order Management & Fulfillment</h2>
+          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>4. Order Management & Returns</h2>
           <p>When a customer places an order, it will appear in your <strong>Orders</strong> tab.</p>
           <ol style={{ paddingLeft: '20px' }}>
-            <li><strong>New Orders:</strong> Check this tab daily. You will see the buyer's details, shipping address, and the products ordered.</li>
-            <li><strong>Order Status:</strong> Keep your buyers informed by updating the order status:
-              <ul style={{ paddingLeft: '20px', marginTop: '5px' }}>
-                <li><em>Processing:</em> You are preparing the item.</li>
-                <li><em>Shipped:</em> The item has been handed to the courier. (Make sure to provide tracking details if applicable!)</li>
-                <li><em>Delivered:</em> The item has reached the buyer.</li>
-              </ul>
-            </li>
-            <li><strong>Cancellations & Returns:</strong> Handle customer return requests promptly through the dashboard to maintain a high seller rating.</li>
+            <li><strong>Order Status:</strong> Keep your buyers informed by updating the order status (Processing → Shipped → Delivered).</li>
+            <li><strong>Buyer Messaging (14-Day Limit):</strong> Buyers can message you directly from their orders page. However, this is restricted to an active order window and up to <strong>14 days post-delivery</strong>. Respond promptly to maintain a high seller rating!</li>
+            <li><strong>Handling Returns:</strong> Buyers can request a return strictly within <strong>14 days</strong> of the delivery date. When they do, they are required to submit a <strong>Return Reason</strong> (e.g., "Defective", "Wrong Size", etc.). You will see this reason explicitly listed on the order in your Fulfillment Queue—use this valuable feedback to improve your future listings and sizing charts!</li>
           </ol>
         </section>
 
         <section>
-          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>5. Payments & Earnings (Razorpay)</h2>
-          <p>Libora uses <strong>Razorpay</strong> to ensure 100% secure, production-ready payments.</p>
+          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>5. Style Coins & Sponsored Ads 🪙</h2>
+          <p><strong>Style Coins</strong> are Libora's premium internal currency that give you powerful marketing tools to boost your store's visibility.</p>
+          
+          <h3 style={{ marginTop: '15px' }}>How Style Coins Help (Sponsored Banners)</h3>
+          <p>You can spend Style Coins to purchase <strong>Sponsored Banners</strong> that appear directly on the Libora Homepage. This acts as prime real estate to showcase your brand, highlight a massive sale, or feature a new collection to thousands of daily visitors!</p>
+          
+          <h3 style={{ marginTop: '15px' }}>How to Earn Style Coins</h3>
           <ul style={{ paddingLeft: '20px' }}>
-            <li><strong>How you get paid:</strong> When a buyer purchases your product, the payment is securely processed. Your earnings (minus any marketplace commissions) will be credited to your registered bank account during the platform's standard payout cycle.</li>
-            <li><strong>Transparency:</strong> You can view a complete history of your transactions, successful payments, and pending payouts in the <strong>Earnings</strong> tab.</li>
+            <li><strong>Without Money (Organically):</strong> You can earn Style Coins organically as rewards for platform engagement. Examples include maintaining a high seller rating, keeping return rates exceptionally low, participating in platform events, or having buyers use your promo codes.</li>
+            <li><strong>With Money (Top-Ups):</strong> If you want to run an immediate marketing campaign and don't have enough coins, you can purchase Style Coin top-ups directly from the platform using real money (e.g., via Razorpay).</li>
           </ul>
         </section>
 
         <section>
-          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>6. Smart Analytics & Dashboard</h2>
-          <p>Your Seller Dashboard provides real-time data to help you make informed business decisions:</p>
+          <h2 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', color: 'var(--secondary)' }}>6. Payments & Earnings (Razorpay)</h2>
+          <p>Libora uses <strong>Razorpay</strong> to ensure 100% secure, production-ready payments.</p>
           <ul style={{ paddingLeft: '20px' }}>
-            <li><strong>Sales Metrics:</strong> View your total revenue, daily sales, and top-selling products.</li>
-            <li><strong>Order Tracking:</strong> Monitor the ratio of completed vs. pending orders.</li>
-            <li><strong>Fraud Detection:</strong> Libora includes smart metrics to flag potentially fraudulent transactions, keeping your business safe.</li>
+            <li><strong>How you get paid:</strong> When a buyer purchases your product, the payment is securely processed. Your earnings (minus any marketplace commissions) will be credited to your registered bank account during the platform's standard payout cycle.</li>
+            <li><strong>Transparency:</strong> You can view a complete history of your transactions, successful payments, and pending payouts in the <strong>Earnings</strong> tab.</li>
           </ul>
         </section>
 
