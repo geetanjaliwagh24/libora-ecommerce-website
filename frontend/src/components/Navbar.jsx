@@ -2,11 +2,12 @@ import React, { useContext, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
-import { Search, ShoppingBag, Heart, User as UserIcon, Store, LayoutDashboard, Trash2, Calendar, Mail, MapPin, Phone, X, LogOut, Package, Compass, Feather, Menu } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User as UserIcon, Store, LayoutDashboard, Trash2, Calendar, Mail, MapPin, Phone, X, LogOut, Package, Compass, Feather, Menu, Bell, MessageSquare } from 'lucide-react';
 import { API_URL } from '../config';
+import { ChatModal } from './ChatModal';
 
 export const Navbar = () => {
-  const { user, logout, deleteAccount } = useContext(AuthContext);
+  const { user, logout, deleteAccount, token } = useContext(AuthContext);
   const { cart } = useContext(CartContext);
   const navigate = useNavigate();
 
@@ -36,6 +37,35 @@ export const Navbar = () => {
     };
     fetchCategories();
   }, []);
+
+  // Notifications State & Polling
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadSenders, setUnreadSenders] = useState([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [chatModal, setChatModal] = useState({ isOpen: false, receiverId: null, receiverName: '' });
+
+  useEffect(() => {
+    let interval;
+    if (user && token) {
+      const fetchUnread = async () => {
+        try {
+          const res = await fetch(`${API_URL}/messages/unread-count`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setUnreadCount(data.total_unread);
+            setUnreadSenders(data.senders);
+          }
+        } catch (err) {
+          console.error('Failed to fetch unread messages:', err);
+        }
+      };
+      fetchUnread();
+      interval = setInterval(fetchUnread, 10000); // Poll every 10s
+    }
+    return () => clearInterval(interval);
+  }, [user, token]);
 
   const handleLogout = () => {
     logout();
@@ -203,6 +233,49 @@ export const Navbar = () => {
             </div>
             <span style={styles.actionText}>Discover</span>
           </Link>
+
+          {user && (
+            <div style={{ position: 'relative' }}>
+              <div 
+                style={styles.actionItem}
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+              >
+                <div style={{ position: 'relative' }}>
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span style={styles.cartBadge}>{unreadCount}</span>
+                  )}
+                </div>
+                <span style={styles.actionText}>Messages</span>
+              </div>
+              
+              {isNotifOpen && (
+                <div style={styles.notifDropdown} className="glass-panel">
+                  <h4 style={styles.notifHeader}>Unread Messages</h4>
+                  {unreadSenders.length === 0 ? (
+                    <div style={styles.notifEmpty}>No new messages</div>
+                  ) : (
+                    unreadSenders.map(sender => (
+                      <div 
+                        key={sender.id} 
+                        style={styles.notifItem}
+                        onClick={() => {
+                          setIsNotifOpen(false);
+                          setChatModal({ isOpen: true, receiverId: sender.id, receiverName: sender.name });
+                        }}
+                      >
+                        <div style={styles.notifAvatar}><MessageSquare size={16} /></div>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem' }}>{sender.name}</p>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--primary)' }}>{sender.count} new message{sender.count > 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {(!user || user.role === 'buyer') && (
             <>
@@ -475,9 +548,28 @@ export const Navbar = () => {
               </div>
             </div>
           )}
+          </div>
         </div>
-      </div>
-    )}
+      )}
+
+      <ChatModal 
+        isOpen={chatModal.isOpen} 
+        onClose={() => {
+          setChatModal({ isOpen: false, receiverId: null, receiverName: '' });
+          // Force an unread refresh when chat modal closes
+          if (user && token) {
+             fetch(`${API_URL}/messages/unread-count`, { headers: { 'Authorization': `Bearer ${token}` } })
+              .then(res => res.json())
+              .then(data => {
+                setUnreadCount(data.total_unread);
+                setUnreadSenders(data.senders);
+              })
+              .catch(console.error);
+          }
+        }}
+        receiverId={chatModal.receiverId}
+        receiverName={chatModal.receiverName}
+      />
     </>
   );
 };
@@ -941,5 +1033,55 @@ const styles = {
     padding: '6px 12px',
     width: '100%',
     border: '1px solid rgba(92, 77, 177, 0.15)',
+  },
+  notifDropdown: {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    width: '300px',
+    marginTop: '16px',
+    background: 'var(--surface-elevated)',
+    borderRadius: '12px',
+    boxShadow: 'var(--shadow-panel)',
+    border: '1px solid var(--border-color)',
+    padding: '12px',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  notifHeader: {
+    margin: '0 0 8px 0',
+    paddingBottom: '8px',
+    borderBottom: '1px solid var(--border-color)',
+    fontSize: '0.95rem',
+    fontWeight: '700',
+    color: 'var(--text-primary)'
+  },
+  notifEmpty: {
+    textAlign: 'center',
+    padding: '20px 0',
+    color: 'var(--text-muted)',
+    fontSize: '0.9rem'
+  },
+  notifItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '10px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    background: 'var(--bg-app)',
+    transition: 'background 0.2s'
+  },
+  notifAvatar: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '50%',
+    background: 'var(--primary-glow)',
+    color: 'var(--primary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 };

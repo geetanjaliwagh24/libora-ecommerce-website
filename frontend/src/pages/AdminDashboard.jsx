@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { ShieldCheck, ShieldAlert, CheckCircle, AlertOctagon, RefreshCw, Scale, UserCheck, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle, AlertOctagon, RefreshCw, Scale, UserCheck, AlertTriangle, MessageSquare } from 'lucide-react';
 import { LineChart, BarChart } from '../components/CustomCharts';
 import { API_URL } from '../config';
+import { ChatModal } from '../components/ChatModal';
 
 export const AdminDashboard = () => {
   const { token } = useContext(AuthContext);
@@ -15,6 +16,9 @@ export const AdminDashboard = () => {
   const [kycSeller, setKycSeller] = useState(null);
   const [kycRejectReason, setKycRejectReason] = useState("");
   
+  // Chat State
+  const [chatModal, setChatModal] = useState({ isOpen: false, receiverId: null, receiverName: '' });
+
   // Platform revenue calculations
   const platformRevenue = stats?.platform_revenue || 0;
 
@@ -314,13 +318,22 @@ export const AdminDashboard = () => {
                       </td>
                       <td style={styles.td}>
                         {s.is_kyc_verified ? (
-                          <button
-                            onClick={() => handleVerifySeller(s.id, false)}
-                            className="btn-danger"
-                            style={styles.tableBtn}
-                          >
-                            Revoke
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleVerifySeller(s.id, false)}
+                              className="btn-danger"
+                              style={styles.tableBtn}
+                            >
+                              Revoke
+                            </button>
+                            <button
+                              onClick={() => setChatModal({ isOpen: true, receiverId: s.user_id || s.id, receiverName: s.business_name || s.email })}
+                              className="btn-outline"
+                              style={styles.tableBtn}
+                            >
+                              <MessageSquare size={14} style={{ marginRight: '4px' }} /> Message
+                            </button>
+                          </div>
                         ) : (
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <button
@@ -332,6 +345,13 @@ export const AdminDashboard = () => {
                               style={{ ...styles.tableBtn, background: 'var(--grad-primary)' }}
                             >
                               Review Documents
+                            </button>
+                            <button
+                              onClick={() => setChatModal({ isOpen: true, receiverId: s.user_id || s.id, receiverName: s.business_name || s.email })}
+                              className="btn-outline"
+                              style={styles.tableBtn}
+                            >
+                              <MessageSquare size={14} style={{ marginRight: '4px' }} /> Message
                             </button>
                           </div>
                         )}
@@ -399,14 +419,16 @@ export const AdminDashboard = () => {
               <div style={styles.documentField}>{kycSeller.bank_details || 'Not Provided'}</div>
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <strong>Rejection Reason (Optional):</strong>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Rejection Reason (Optional)</label>
               <textarea 
+                rows="3" 
                 value={kycRejectReason}
                 onChange={(e) => setKycRejectReason(e.target.value)}
-                placeholder="If rejecting, please provide a reason for the seller..."
-                style={{ ...styles.inputField, minHeight: '80px', marginTop: '8px' }}
-              />
+                className="cyber-input" 
+                style={{ width: '100%', resize: 'none' }}
+                placeholder="If rejecting, provide a reason here..."
+              ></textarea>
             </div>
             
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
@@ -433,6 +455,13 @@ export const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      <ChatModal 
+        isOpen={chatModal.isOpen} 
+        onClose={() => setChatModal({ isOpen: false, receiverId: null, receiverName: '' })}
+        receiverId={chatModal.receiverId}
+        receiverName={chatModal.receiverName}
+      />
     </div>
   );
 };

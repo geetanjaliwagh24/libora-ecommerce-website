@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Clock, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, CornerUpLeft, CreditCard, Loader2 } from 'lucide-react';
+import { Clock, ShieldAlert, ChevronRight, ChevronDown, ChevronUp, CornerUpLeft, CreditCard, Loader2, MessageSquare } from 'lucide-react';
 import { API_URL } from '../config';
+import { ChatModal } from '../components/ChatModal';
 
 export const BuyerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -14,6 +15,14 @@ export const BuyerOrders = () => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Return State
+  const [returnModal, setReturnModal] = useState({ isOpen: false, orderId: null });
+  const [returnReason, setReturnReason] = useState('Changed my mind');
+  const [returnCustomReason, setReturnCustomReason] = useState('');
+  
+  // Chat State
+  const [chatModal, setChatModal] = useState({ isOpen: false, receiverId: null, receiverName: '' });
 
   // Camera & Media States for Reviews
   const [capturedPhotos, setCapturedPhotos] = useState([]);
@@ -38,6 +47,29 @@ export const BuyerOrders = () => {
   
   const [expandedOrders, setExpandedOrders] = useState({});
   const [paymentLoading, setPaymentLoading] = useState({});
+
+  const RETURN_PERIOD_DAYS = 14;
+
+  const isReturnPeriodValid = (orderDateStr) => {
+    const orderDate = new Date(orderDateStr);
+    const now = new Date();
+    const diffTime = Math.abs(now - orderDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= RETURN_PERIOD_DAYS;
+  };
+
+  const canMessage = (order) => {
+    if (['Returned', 'Refunded'].includes(order.status)) return false;
+    if (order.status === 'Delivered') {
+      return isReturnPeriodValid(order.created_at);
+    }
+    return true;
+  };
+
+  const canReturn = (order) => {
+    if (order.status !== 'Delivered') return false;
+    return isReturnPeriodValid(order.created_at);
+  };
 
   const toggleOrderExpansion = (orderId) => {
     setExpandedOrders(prev => ({
@@ -207,23 +239,30 @@ export const BuyerOrders = () => {
     }
   };
 
-  const handleReturnRequest = async (orderId) => {
-    if (!window.confirm('Are you sure you want to request a return for this order?')) return;
-    
+  const submitReturnRequest = async (e) => {
+    e.preventDefault();
+    const finalReason = returnReason === 'Other' ? returnCustomReason : returnReason;
+    if (!finalReason.trim()) {
+      alert("Please provide a reason.");
+      return;
+    }
     try {
-      const res = await fetch(`${API_URL}/orders/${orderId}/status`, {
-        method: 'PUT',
+      const res = await fetch(`${API_URL}/orders/${returnModal.orderId}/return`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ status: 'Return_Requested' })
+        body: JSON.stringify({ reason: finalReason })
       });
       
       if (res.ok) {
+        alert("Return requested successfully");
+        setReturnModal({ isOpen: false, orderId: null });
         fetchOrders();
       } else {
-        alert('Failed to request return.');
+        const data = await res.json();
+        alert(data.message || 'Failed to request return.');
       }
     } catch (err) {
       console.error(err);
@@ -631,19 +670,40 @@ export const BuyerOrders = () => {
                           </button>
                         )}
 
-                        {order.status === 'Delivered' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReturnRequest(order.id);
-                            }}
-                            className="btn-danger"
-                            style={styles.returnBtn}
-                          >
-                            <CornerUpLeft size={16} />
-                            Request Return
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          {canMessage(order) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const sellerId = order.items[0]?.seller_id;
+                                const sellerName = order.items[0]?.seller_name;
+                                if(sellerId) {
+                                  setChatModal({ isOpen: true, receiverId: sellerId, receiverName: sellerName });
+                                } else {
+                                  alert("Seller information not available.");
+                                }
+                              }}
+                              className="btn-outline"
+                              style={{...styles.returnBtn, borderColor: 'var(--primary)', color: 'var(--primary)'}}
+                            >
+                              <MessageSquare size={16} /> Contact Seller
+                            </button>
+                          )}
+
+                          {canReturn(order) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReturnModal({ isOpen: true, orderId: order.id });
+                              }}
+                              className="btn-danger"
+                              style={styles.returnBtn}
+                            >
+                              <CornerUpLeft size={16} />
+                              Request Return
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -778,6 +838,63 @@ export const BuyerOrders = () => {
           </div>
         </div>
       )}
+
+      {/* Return Request Modal */}
+      {returnModal.isOpen && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent} className="glass-panel">
+            <h3 style={{ marginTop: 0, marginBottom: '8px' }}>Request Return</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px' }}>
+              Please let us know why you are returning this order.
+            </p>
+            <form onSubmit={submitReturnRequest}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Reason</label>
+                <select 
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="cyber-input"
+                  style={{ width: '100%', padding: '10px' }}
+                >
+                  <option value="Changed my mind">Changed my mind</option>
+                  <option value="Defective or damaged">Defective or damaged</option>
+                  <option value="Wrong size/fit">Wrong size/fit</option>
+                  <option value="Item not as described">Item not as described</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              
+              {returnReason === 'Other' && (
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Please Specify</label>
+                  <textarea 
+                    rows="3"
+                    value={returnCustomReason}
+                    onChange={(e) => setReturnCustomReason(e.target.value)}
+                    className="cyber-input"
+                    style={{ width: '100%', resize: 'none' }}
+                    placeholder="Enter details here..."
+                    required
+                  ></textarea>
+                </div>
+              )}
+              
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+                <button type="submit" className="btn-danger" style={{ flex: 1 }}>Submit Return</button>
+                <button type="button" onClick={() => setReturnModal({ isOpen: false, orderId: null })} className="btn-outline" style={{ flex: 1 }}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <ChatModal 
+        isOpen={chatModal.isOpen} 
+        onClose={() => setChatModal({ isOpen: false, receiverId: null, receiverName: '' })}
+        receiverId={chatModal.receiverId}
+        receiverName={chatModal.receiverName}
+      />
+
     </div>
   );
 };

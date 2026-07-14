@@ -91,6 +91,7 @@ def create_app(config_class=Config):
     from app.routes.reviews import reviews_bp
     from app.routes.wishlist import wishlist_bp
     from app.routes.ai import ai_bp
+    from app.routes.messages import messages_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(products_bp, url_prefix='/api/products')
@@ -101,6 +102,7 @@ def create_app(config_class=Config):
     app.register_blueprint(reviews_bp, url_prefix='/api/reviews')
     app.register_blueprint(wishlist_bp, url_prefix='/api/wishlist')
     app.register_blueprint(ai_bp, url_prefix='/api/ai')
+    app.register_blueprint(messages_bp, url_prefix='/api/messages')
     
     # Unified Serving: serve frontend index.html for all non-API routes
     @app.route('/', defaults={'path': ''})

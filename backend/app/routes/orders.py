@@ -599,3 +599,29 @@ def update_order_status(current_user, order_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': f'Failed to update status: {str(e)}'}), 500
+
+@orders_bp.route('/<int:order_id>/return', methods=['POST'])
+@token_required
+def request_return(current_user, order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.user_id != current_user.id:
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    if order.status != 'Delivered':
+        return jsonify({'message': 'Only delivered orders can be returned'}), 400
+        
+    days_since_order = (datetime.utcnow() - order.created_at).days
+    if days_since_order > 14:
+        return jsonify({'message': 'Return period (14 days) has expired'}), 400
+        
+    data = request.get_json()
+    reason = data.get('reason', '').strip()
+    
+    if not reason:
+        return jsonify({'message': 'Return reason is required'}), 400
+        
+    order.status = 'Return_Requested'
+    order.return_reason = reason
+    db.session.commit()
+    
+    return jsonify({'message': 'Return requested successfully', 'order': order.to_dict()}), 200

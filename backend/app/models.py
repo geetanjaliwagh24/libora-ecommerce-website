@@ -320,6 +320,7 @@ class Order(db.Model):
     buyer_order_sequence = db.Column(db.Integer, nullable=True) # Lifetime sequence number for this buyer
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='Placed') # Placed, Confirmed, Shipped, Delivered, Return_Requested, Returned, Refunded
+    return_reason = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     billing_address = db.Column(db.String(255), nullable=False)
@@ -359,6 +360,7 @@ class Order(db.Model):
             'payment_method': self.payment_method,
             'payment_status': self.payment_status,
             'platform_fee': self.platform_fee,
+            'return_reason': self.return_reason,
             'items': [item.to_dict() for item in self.items],
             'is_flagged': len(self.fraud_logs) > 0
         }
@@ -553,6 +555,33 @@ class PaymentTransfer(db.Model):
             'razorpay_transfer_id': self.razorpay_transfer_id,
             'amount': self.amount,
             'status': self.status,
+            'created_at': self.created_at.isoformat()
+        }
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    receiver = db.relationship('User', foreign_keys=[receiver_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'receiver_id': self.receiver_id,
+            'sender_email': self.sender.email if self.sender else 'Unknown',
+            'sender_role': self.sender.role if self.sender else 'Unknown',
+            'receiver_email': self.receiver.email if self.receiver else 'Unknown',
+            'receiver_role': self.receiver.role if self.receiver else 'Unknown',
+            'content': self.content,
+            'is_read': self.is_read,
             'created_at': self.created_at.isoformat()
         }
 

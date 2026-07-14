@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Store, UploadCloud, AlertCircle, ShieldCheck, CheckCircle2, Pencil, X, Package } from 'lucide-react';
+import { Store, UploadCloud, AlertCircle, ShieldCheck, CheckCircle2, Pencil, X, Package, MessageSquare } from 'lucide-react';
 import { LineChart, BarChart } from '../components/CustomCharts';
 import { API_URL } from '../config';
+import { ChatModal } from '../components/ChatModal';
 export const SellerDashboard = () => {
   const { token, user, submitKyc } = useContext(AuthContext);
   
@@ -77,6 +78,8 @@ export const SellerDashboard = () => {
   const [couponDaysValid, setCouponDaysValid] = useState('30');
   const [couponMessage, setCouponMessage] = useState({ text: '', type: '' });
 
+  // Chat State
+  const [chatModal, setChatModal] = useState({ isOpen: false, receiverId: null, receiverName: '' });
   const handleOpenEditModal = (product) => {
     setEditProductId(product.id);
     setEditName(product.name);
@@ -1203,7 +1206,15 @@ export const SellerDashboard = () => {
                   <div style={styles.queueHeader}>
                     <div>
                       <h4 style={styles.queueOrderId}>Order #{ord.seller_order_sequence || ord.id}</h4>
-                      <span style={styles.queueBuyer}>{ord.buyer_email}</span>
+                      <span style={styles.queueBuyer}>
+                        {ord.buyer_email}
+                        <button 
+                          onClick={() => setChatModal({ isOpen: true, receiverId: ord.user_id, receiverName: ord.buyer_email })}
+                          style={{ marginLeft: '10px', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center' }}
+                        >
+                          <MessageSquare size={14} style={{ marginRight: '4px' }} /> Message Buyer
+                        </button>
+                      </span>
                     </div>
                     <span style={styles.queueStatus}>{ord.status.replace('_', ' ')}</span>
                   </div>
@@ -1236,6 +1247,12 @@ export const SellerDashboard = () => {
                   </div>
 
                   <p style={styles.queueAddress}>📍 <b>Ship to:</b> {ord.delivery_address}</p>
+
+                  {ord.status === 'Return_Requested' && (
+                    <div style={{ padding: '10px', background: 'rgba(255, 59, 48, 0.1)', borderRadius: '6px', margin: '10px 0', borderLeft: '4px solid var(--danger)' }}>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--danger)' }}><b>Return Reason:</b> {ord.return_reason}</p>
+                    </div>
+                  )}
 
                   <div style={styles.queueActions}>
                     {ord.status === 'Placed' && (
@@ -1583,6 +1600,13 @@ export const SellerDashboard = () => {
           </div>
         </div>
       )}
+
+      <ChatModal 
+        isOpen={chatModal.isOpen} 
+        onClose={() => setChatModal({ isOpen: false, receiverId: null, receiverName: '' })}
+        receiverId={chatModal.receiverId}
+        receiverName={chatModal.receiverName}
+      />
     </div>
   );
 };

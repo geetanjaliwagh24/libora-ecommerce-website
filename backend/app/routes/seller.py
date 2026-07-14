@@ -80,6 +80,7 @@ def get_seller_orders(current_user):
             
             orders_dict[order.id] = {
                 'id': order.id,
+                'user_id': order.user_id,
                 'seller_order_sequence': seller_seq,
                 'buyer_email': order.buyer.email,
                 'status': order.status,
