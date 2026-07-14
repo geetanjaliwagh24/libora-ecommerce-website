@@ -4,6 +4,7 @@ import { Store, UploadCloud, AlertCircle, ShieldCheck, CheckCircle2, Pencil, X, 
 import { LineChart, BarChart } from '../components/CustomCharts';
 import { API_URL } from '../config';
 import { ChatModal } from '../components/ChatModal';
+import { SellerHandbook } from '../components/SellerHandbook';
 export const SellerDashboard = () => {
   const { token, user, submitKyc } = useContext(AuthContext);
   
@@ -541,7 +542,10 @@ export const SellerDashboard = () => {
         <button onClick={() => { setActiveTab('sponsored'); fetchMyBanners(); }} style={{ ...styles.tabBtn, ...(activeTab === 'sponsored' ? styles.tabBtnActive : {}) }}>⭐ Sponsored</button>
         <button onClick={() => { setActiveTab('coupons'); fetchCoupons(); }} style={{ ...styles.tabBtn, ...(activeTab === 'coupons' ? styles.tabBtnActive : {}) }}>🎫 Coupons</button>
         <button onClick={() => { setActiveTab('coins'); }} style={{ ...styles.tabBtn, ...(activeTab === 'coins' ? styles.tabBtnActive : {}) }}>🪙 Style Coins</button>
+        <button onClick={() => { setActiveTab('handbook'); }} style={{ ...styles.tabBtn, ...(activeTab === 'handbook' ? styles.tabBtnActive : {}) }}>📖 Seller Guide</button>
       </div>
+
+      {activeTab === 'handbook' && <SellerHandbook />}
 
       {activeTab === 'analytics' && (
         <div style={{ marginBottom: '40px' }}>
