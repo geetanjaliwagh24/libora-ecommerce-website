@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
-from app.models import db, Seller, Product, Order, OrderItem, SellerOrderSequence, BannerAd, Coupon
+from app.models import db, Seller, Product, Order, OrderItem, SellerOrderSequence, BannerAd, Coupon, Category
+from sqlalchemy.orm import selectinload, joinedload
 from app.routes.auth_helper import token_required, role_required
 
 seller_bp = Blueprint('seller', __name__)
@@ -98,7 +99,11 @@ def get_seller_orders(current_user):
 @token_required
 @role_required(['seller'])
 def get_seller_products(current_user):
-    products = Product.query.filter_by(seller_id=current_user.id).order_by(Product.created_at.desc()).all()
+    products = Product.query.options(
+        joinedload(Product.category).joinedload(Category.parent).joinedload(Category.parent),
+        joinedload(Product.seller),
+        selectinload(Product.reviews)
+    ).filter_by(seller_id=current_user.id).order_by(Product.created_at.desc()).all()
     return jsonify([p.to_dict() for p in products]), 200
 
 @seller_bp.route('/analytics', methods=['GET'])
