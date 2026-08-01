@@ -112,7 +112,10 @@ def get_seller_products(current_user):
 def get_seller_analytics(current_user):
     from collections import defaultdict
     
-    items = OrderItem.query.join(Product).filter(
+    items = OrderItem.query.options(
+        joinedload(OrderItem.order),
+        joinedload(OrderItem.product).joinedload(Product.category).joinedload(Category.parent).joinedload(Category.parent)
+    ).join(Product).filter(
         Product.seller_id == current_user.id
     ).all()
     
