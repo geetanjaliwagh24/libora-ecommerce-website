@@ -38,7 +38,7 @@
 ## 🚀 Live Demo
 
 The application is deployed live! 
-- **Frontend URL:** *[https://libora-ecommerce-website.netlify.app//]*
+- **Frontend URL:** *[https://libora-ecommerce-website.netlify.app/]*
 - **Backend API:** Hosted on Render (`https://libora-ecommerce-website.onrender.com`)
 
 *Note: The backend is hosted on a free tier and may take 30-60 seconds to wake up from inactivity on the first request.*
