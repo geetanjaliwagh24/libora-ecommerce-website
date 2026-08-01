@@ -149,6 +149,10 @@ class Product(db.Model):
             self.image_url = json.dumps([value] if value else [])
 
     def to_dict(self):
+        from app.utils_encoder import encode_product_id, slugify_name
+        public_id = encode_product_id(self.id)
+        slug = slugify_name(self.name)
+        
         # Calculate rating - defaults to 0.0 if there are no reviews
         ratings = [r.rating for r in self.reviews]
         avg_rating = sum(ratings) / len(ratings) if ratings else 0.0
@@ -166,6 +170,10 @@ class Product(db.Model):
                     
         return {
             'id': self.id,
+            'public_id': public_id,
+            'asin': public_id,
+            'slug': slug,
+            'canonical_url': f"/dp/{public_id}",
             'seller_id': self.seller_id,
             'seller_name': self.seller.business_name,
             'name': self.name,
@@ -303,12 +311,14 @@ class WishlistItem(db.Model):
         return {
             'id': self.id,
             'product_id': self.product_id,
-            'seller_id': self.product.seller_id,
-            'product_name': self.product.name,
-            'price': self.product.discounted_price,
-            'original_price': self.product.price,
-            'discount': self.product.discount,
-            'image_url': self.product.images[0] if self.product.images else '',
+            'seller_id': self.product.seller_id if self.product else None,
+            'product_name': self.product.name if self.product else 'Deleted Product',
+            'price': self.product.discounted_price if self.product else 0.0,
+            'original_price': self.product.price if self.product else 0.0,
+            'discount': self.product.discount if self.product else 0,
+            'stock': self.product.stock if self.product else 0,
+            'sizes': self.product.sizes_dict if self.product else {},
+            'image_url': self.product.images[0] if (self.product and self.product.images) else '',
             'created_at': self.created_at.isoformat()
         }
 

@@ -9,9 +9,9 @@ Welcome to the **Libora Marketplace**! We are thrilled to have you onboard as a 
 ### Registration and Approval
 To start selling on Libora, you first need a registered Seller Account.
 1. Navigate to the **Libora Sign-Up Page**.
-2. Select **"Register as a Seller"**.
-3. Fill in your business details, email, and contact information.
-4. Once submitted, your account may require approval from the Marketplace Admin. You will receive an SMS/Email notification (via Twilio) once your account is active.
+2. Enter your phone number and email address, and verify via Email OTP.
+3. Select **"Register as a Seller"** and fill in your business details, password, and KYC information.
+4. Once submitted, your account may require approval from the Marketplace Admin. You will receive an Email notification once your account is active.
 
 ### Logging In
 Once approved, log in using your credentials to access the **Seller Dashboard**—your central hub for managing your entire business on Libora.

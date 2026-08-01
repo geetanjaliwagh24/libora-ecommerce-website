@@ -364,8 +364,9 @@ export const ProductDetails = () => {
     );
   }
 
-  const hasSizes = product.sizes && Object.keys(product.sizes).length > 0;
-  const totalStock = hasSizes ? Object.values(product.sizes).reduce((a, b) => a + b, 0) : (product.stock || 0);
+  const hasSizes = product.sizes && typeof product.sizes === 'object' && Object.keys(product.sizes).length > 0;
+  const sizesStockSum = hasSizes ? Object.values(product.sizes).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+  const totalStock = (hasSizes && sizesStockSum > 0) ? sizesStockSum : (product.stock !== undefined && product.stock !== null ? Number(product.stock) : 0);
   const isOutOfStock = totalStock <= 0;
   const isNewProduct = product.created_at && (Math.abs(new Date() - new Date(product.created_at)) / (1000 * 60 * 60 * 24) <= 10);
 
@@ -509,7 +510,7 @@ export const ProductDetails = () => {
                   .map(variant => (
                   <button
                     key={variant.id}
-                    onClick={() => navigate(`/product/${variant.id}`)}
+                    onClick={() => navigate(`/dp/${variant.asin || variant.public_id || variant.id}`)}
                     title={variant.color_name}
                     style={{
                       padding: 0,
@@ -975,7 +976,7 @@ export const ProductDetails = () => {
                   key={prod.id} 
                   style={styles.recCard} 
                   className="cyber-card"
-                  onClick={() => navigate(`/product/${prod.id}`)}
+                  onClick={() => navigate(`/dp/${prod.asin || prod.public_id || prod.id}`)}
                 >
                   <div style={styles.recImageWrapper}>
                     <img 

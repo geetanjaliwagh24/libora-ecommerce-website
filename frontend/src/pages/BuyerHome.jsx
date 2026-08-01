@@ -91,17 +91,14 @@ export const BuyerHome = () => {
       if (params.sort) qp.append('sort', params.sort);
       if (params.seller_id) qp.append('seller_id', params.seller_id);
       
-      const isSearching = params.q || params.category_id || params.min_price || params.max_price || params.seller_id || (params.sort && params.sort !== 'newest');
-      if (isSearching) {
-        qp.append('page', params.page || 1);
-        qp.append('per_page', 12);
-      }
+      qp.append('page', params.page || 1);
+      qp.append('per_page', params.per_page || 40);
 
-      const url = `${API_URL}/products${qp.toString() ? '?' + qp.toString() : ''}`;
+      const url = `${API_URL}/products?${qp.toString()}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        if (isSearching && data.products !== undefined) {
+        if (data && data.products !== undefined) {
           setProducts(data.products);
           setPagination({
             page: data.page,
@@ -110,7 +107,7 @@ export const BuyerHome = () => {
             has_prev: data.has_prev,
             total: data.total
           });
-        } else {
+        } else if (Array.isArray(data)) {
           setProducts(data);
           setPagination({ page: 1, total_pages: 1, has_next: false, has_prev: false, total: data.length });
         }
@@ -204,13 +201,14 @@ export const BuyerHome = () => {
   const activeFiltersCount = [minPrice, maxPrice, sort !== 'newest' ? sort : ''].filter(Boolean).length;
 
   const renderProductCard = (prod, isDiscounted = false) => {
-    const hasSizes = prod.sizes && Object.keys(prod.sizes).length > 0;
-    const totalStock = hasSizes ? Object.values(prod.sizes).reduce((a, b) => a + b, 0) : prod.stock;
+    const hasSizes = prod.sizes && typeof prod.sizes === 'object' && Object.keys(prod.sizes).length > 0;
+    const sizesStockSum = hasSizes ? Object.values(prod.sizes).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+    const totalStock = (hasSizes && sizesStockSum > 0) ? sizesStockSum : (prod.stock !== undefined && prod.stock !== null ? Number(prod.stock) : 0);
     const isOutOfStock = totalStock <= 0;
 
     return (
     <div key={prod.id} className="cyber-card" style={styles.card}>
-      <Link to={`/product/${prod.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <Link to={`/dp/${prod.asin || prod.public_id || prod.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={styles.imageWrapper}>
           <img src={prod.image_url || 'https://via.placeholder.com/200x200'} alt={prod.name} style={{...styles.productImg, opacity: isOutOfStock ? 0.5 : 1}} />
           {isOutOfStock && (
@@ -393,11 +391,11 @@ export const BuyerHome = () => {
             </div>
             
             {loading ? (
-              <div style={styles.productGrid}>
+              <div style={styles.productGrid} className="product-grid">
                 {Array.from({ length: 8 }).map((_, idx) => renderSkeletonCard(idx))}
               </div>
             ) : products.length > 0 ? (
-              <div style={styles.productGrid}>{products.map(p => renderProductCard(p, false))}</div>
+              <div style={styles.productGrid} className="product-grid">{products.map(p => renderProductCard(p, false))}</div>
             ) : (
               <div style={styles.emptyState}>
                 <ShoppingCart size={48} style={{ color: 'var(--border-color)', marginBottom: '16px' }} />
@@ -418,22 +416,49 @@ export const BuyerHome = () => {
                   ◀ Prev
                 </button>
                 
-                {Array.from({ length: pagination.total_pages }, (_, idx) => idx + 1).map(pageNum => (
-                  <button 
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className="btn-primary"
-                    style={{
-                      ...styles.pageNumberBtn,
-                      background: pagination.page === pageNum ? 'var(--grad-primary)' : 'transparent',
-                      border: pagination.page === pageNum ? 'none' : '1px solid var(--border-color)',
-                      color: pagination.page === pageNum ? 'var(--text-light)' : 'var(--text-secondary)',
-                      boxShadow: pagination.page === pageNum ? 'var(--shadow-glow)' : 'none',
-                    }}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
+                {(() => {
+                  const curr = pagination.page || 1;
+                  const total = pagination.total_pages || 1;
+                  const pages = [];
+
+                  if (total <= 7) {
+                    for (let i = 1; i <= total; i++) pages.push(i);
+                  } else {
+                    if (curr <= 4) {
+                      pages.push(1, 2, 3, 4, 5, '...', total);
+                    } else if (curr >= total - 3) {
+                      pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
+                    } else {
+                      pages.push(1, '...', curr - 1, curr, curr + 1, '...', total);
+                    }
+                  }
+
+                  return pages.map((item, idx) => {
+                    if (item === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} style={{ padding: '0 6px', color: 'var(--text-muted)', fontSize: '0.9rem', alignSelf: 'center', userSelect: 'none' }}>
+                          ...
+                        </span>
+                      );
+                    }
+                    return (
+                      <button 
+                        key={item}
+                        onClick={() => handlePageChange(item)}
+                        className="btn-primary"
+                        style={{
+                          ...styles.pageNumberBtn,
+                          background: curr === item ? 'var(--grad-primary)' : 'transparent',
+                          border: curr === item ? 'none' : '1px solid var(--border-color)',
+                          color: curr === item ? 'var(--text-light)' : 'var(--text-secondary)',
+                          boxShadow: curr === item ? 'var(--shadow-glow)' : 'none',
+                        }}
+                      >
+                        {item}
+                      </button>
+                    );
+                  });
+                })()}
                 
                 <button 
                   onClick={() => handlePageChange(pagination.page + 1)} 

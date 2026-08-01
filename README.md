@@ -31,7 +31,7 @@
 **Integrations**
 - **Razorpay** for payment processing
 - **Groq / Gemini** for AI capabilities
-- **Twilio** for SMS notifications
+- **SMTP** for Email notifications and OTP verification
 
 ---
 

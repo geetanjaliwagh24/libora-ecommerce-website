@@ -45,6 +45,8 @@ function App() {
                   <Route path="/" element={<BuyerHome />} />
                   <Route path="/wishlist" element={<ProtectedRoute allowedRoles={['buyer']}><BuyerWishlist /></ProtectedRoute>} />
                   <Route path="/product/:id" element={<ProductDetails />} />
+                  <Route path="/dp/:id" element={<ProductDetails />} />
+                  <Route path="/product/dp/:id" element={<ProductDetails />} />
                 <Route path="/cart" element={<ProtectedRoute allowedRoles={['buyer']}><CartPage /></ProtectedRoute>} />
                   <Route path="/checkout" element={<ProtectedRoute allowedRoles={['buyer']}><CheckoutPage /></ProtectedRoute>} />
                   <Route path="/orders" element={<ProtectedRoute allowedRoles={['buyer']}><BuyerOrders /></ProtectedRoute>} />

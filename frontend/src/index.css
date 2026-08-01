@@ -70,17 +70,18 @@ body {
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-app);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(138, 43, 226, 0.3);
+  background: rgba(92, 77, 177, 0.25);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.5);
+  background: var(--primary);
 }
 
 /* Glassmorphism Panel */
@@ -109,12 +110,12 @@ body {
 }
 
 .cyber-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   border-color: var(--secondary);
   box-shadow: var(--shadow-cyber), var(--shadow-card);
 }
 
-/* Neon buttons */
+/* Neon & Action Buttons */
 .btn-primary {
   background: var(--grad-primary);
   color: var(--text-light);
@@ -125,13 +126,14 @@ body {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {
-  transform: scale(1.02);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-glow);
 }
 
@@ -149,13 +151,14 @@ body {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all 0.2s ease;
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 240, 255, 0.1);
+  background: rgba(16, 185, 129, 0.1);
   box-shadow: var(--shadow-cyber);
 }
 
@@ -169,8 +172,9 @@ body {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all 0.2s ease;
 }
 
@@ -186,15 +190,16 @@ body {
   color: var(--text-primary);
   padding: 12px 16px;
   border-radius: var(--radius-sm);
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
   font-family: var(--font-sans);
+  width: 100%;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .cyber-input:focus {
   border-color: var(--secondary);
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
 }
 
 /* Text glow */
@@ -207,10 +212,17 @@ body {
   text-shadow: 0 0 10px var(--secondary-glow);
 }
 
-/* Grid helper */
-.grid-container {
+/* Grid Layout Utilities */
+.responsive-grid {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
 
 /* Badges */
@@ -224,14 +236,14 @@ body {
   text-transform: uppercase;
 }
 
-.badge-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(0, 230, 118, 0.2); }
-.badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(255, 179, 0, 0.2); }
-.badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(255, 23, 68, 0.2); }
-.badge-info { background: rgba(0, 240, 255, 0.1); color: var(--secondary); border: 1px solid rgba(0, 240, 255, 0.2); }
+.badge-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(255, 145, 0, 0.2); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239, 83, 80, 0.2); }
+.badge-info { background: rgba(92, 77, 177, 0.1); color: var(--primary); border: 1px solid rgba(92, 77, 177, 0.2); }
 
 .mega-menu-link { 
   text-decoration: none; 
-  color: #282c3f; 
+  color: var(--text-primary); 
   font-size: 14px; 
   padding: 6px 0; 
   display: block; 
@@ -239,9 +251,9 @@ body {
 } 
 
 .mega-menu-link:hover { 
-  color: #ff3f6c; 
+  color: var(--primary); 
   font-weight: 700; 
-  transform: translateX(5px); 
+  transform: translateX(4px); 
 }
 
 /* Product title link */
@@ -269,127 +281,86 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Global Mobile Responsiveness (Width <= 768px) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================
+   Clean Mobile Responsiveness (Screen <= 768px)
+   ========================================== */
 @media (max-width: 768px) {
-  /* 1. Navbar mobile overrides */
+  /* 1. Layout Stacking & Grid Adjustments */
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Standard Product Grids: Clean 2 columns on mobile devices */
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  /* Full-width CTAs on Mobile */
+  .btn-full-mobile {
+    width: 100% !important;
+  }
+
+  /* 2. Container & Section Padding */
+  body {
+    font-size: 14px;
+  }
+
+  /* 3. Navigation Bar Mobile Overrides */
   .mobile-search-bar {
     display: block !important;
     width: 100% !important;
-    margin-top: 8px !important;
+    margin-top: 10px !important;
   }
-  nav {
-    height: auto !important;
-    padding: 10px 16px !important;
-  }
-  nav > div {
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    gap: 0 !important;
-  }
+  
   .mobile-menu-toggle {
     display: flex !important;
-    color: var(--text-primary) !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
   }
+  
   .desktop-nav-categories,
   .desktop-search-form,
   .desktop-only-action {
     display: none !important;
   }
+  
   .nav-actions-container span {
     display: none !important;
   }
-  .nav-actions-container {
-    width: auto !important;
-    border-top: none !important;
-    padding-top: 0 !important;
-    gap: 16px !important;
-  }
 
-  /* 2. Layout Grid Stacking & Alignment */
-  .responsive-grid {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
-  }
-
-  /* Adjust product pages standard grids */
-  div[style*="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))"],
-  div[style*="gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))'"],
-  div[style*="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))"] {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
-    gap: 12px !important;
-  }
-
-  /* Suggested / Similar product grid on detail pages */
-  div[style*="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))"],
-  div[style*="gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))'"] {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
-    gap: 12px !important;
-  }
-
-  /* Adjust product card sizes */
-  div[style*="minWidth: '180px'"] {
-    min-width: 130px !important;
-    max-width: 100% !important;
-  }
-
-  /* Adjust home/carousels to scroll beautifully */
-  div[style*="overflow-x: 'auto'"],
-  div[style*="overflowX: 'auto'"] {
-    gap: 12px !important;
-    padding-bottom: 6px !important;
-  }
-  
-  /* Main image panel size reduction */
-  div[style*="height: '450px'"],
-  div[style*="height:450px"] {
-    height: 300px !important;
-  }
-  
-  /* 3. Dashboard layouts stack sidebar and grids */
-  div[style*="grid-template-columns: 1fr 1fr"],
-  div[style*="gridTemplateColumns: '1fr 1fr'"] {
-    grid-template-columns: 1fr !important;
-    gap: 20px !important;
-  }
-  
-  /* Flex directions on mobile */
-  div[style*="display: flex"][style*="flex-direction: row"],
-  div[style*="display:flex"][style*="flexDirection: 'row'"] {
-    flex-direction: column !important;
-  }
-  
-  /* Profile Page forms column layout */
-  div[style*="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))"] {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Adjust buttons and modals */
-  button {
-    width: 100% !important;
-  }
-  
-  /* Keep inline/small buttons compact */
-  nav button:not(.ai-stylist-fab), 
-  div[style*="display: flex"] button:not(.ai-stylist-fab),
-  div[style*="display:flex"] button:not(.ai-stylist-fab),
-  .qtyControl button:not(.ai-stylist-fab),
-  .subtotalArea button:not(.ai-stylist-fab) {
-    width: auto !important;
-  }
-  
-  button.ai-stylist-fab {
-    width: 60px !important;
-    height: 60px !important;
-  }
-  
-  /* AI Stylist Mobile Fixes */
+  /* 4. AI Stylist Widget Mobile Adjustments */
   .ai-stylist-chat-container {
-    width: 90% !important;
-    right: 5% !important;
-    left: 5% !important;
-    max-height: 70vh !important;
-    bottom: 90px !important;
+    width: 94% !important;
+    right: 3% !important;
+    left: 3% !important;
+    max-height: 75vh !important;
+    bottom: 80px !important;
+  }
+
+  button.ai-stylist-fab {
+    width: 54px !important;
+    height: 54px !important;
+    bottom: 20px !important;
+    right: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 }

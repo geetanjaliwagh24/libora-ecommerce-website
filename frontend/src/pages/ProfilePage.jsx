@@ -40,21 +40,18 @@ export const ProfilePage = () => {
   };
 
   const initiateSave = async () => {
-    if (!phoneRegex.test(phone)) {
+    if (phone && !phoneRegex.test(phone)) {
       triggerAlert('Phone number must start with a country code (e.g. +91) followed by digits.', 'danger');
       return;
     }
 
     const emailChanged = email !== user.email;
-    const phoneChanged = phone !== user.phone;
 
-    if (emailChanged || phoneChanged) {
-      // Need OTP
+    if (emailChanged) {
+      // Need Email OTP
       try {
         setVerifying(true);
-        const reqBody = {};
-        if (emailChanged) reqBody.email = email;
-        if (phoneChanged) reqBody.phone = phone;
+        const reqBody = { email };
 
         const res = await fetch(`${API_URL}/auth/send-otp`, {
           method: 'POST',
@@ -66,9 +63,9 @@ export const ProfilePage = () => {
         if (res.ok) {
           setOtpId(data.otp_id);
           setShowOtpModal(true);
-          triggerAlert('OTPs sent! Please check console in dev mode.', 'success');
+          triggerAlert('Verification code sent to your new email address!', 'success');
         } else {
-          triggerAlert(data.message || 'Failed to send OTP.', 'danger');
+          triggerAlert(data.message || 'Failed to send verification code.', 'danger');
         }
       } catch (e) {
         setVerifying(false);
@@ -82,22 +79,15 @@ export const ProfilePage = () => {
 
   const handleVerifyOtpAndSave = async () => {
     const emailChanged = email !== user.email;
-    const phoneChanged = phone !== user.phone;
     
-    if (emailChanged && !emailOtp) {
+    if (emailChanged && (!emailOtp || emailOtp.trim().length === 0)) {
       triggerAlert('Email OTP is required', 'danger');
-      return;
-    }
-    if (phoneChanged && !phoneOtp) {
-      triggerAlert('Phone OTP is required', 'danger');
       return;
     }
 
     try {
       setVerifying(true);
-      const reqBody = { otp_id: otpId };
-      if (emailChanged) reqBody.email_otp = emailOtp;
-      if (phoneChanged) reqBody.phone_otp = phoneOtp;
+      const reqBody = { otp_id: otpId, email_otp: emailOtp.trim() };
 
       const res = await fetch(`${API_URL}/auth/verify-otp`, {
         method: 'POST',
@@ -131,7 +121,6 @@ export const ProfilePage = () => {
         setEditing(false);
         setShowOtpModal(false);
         setEmailOtp('');
-        setPhoneOtp('');
         if (refreshProfile) refreshProfile();
       } else {
         const d = await res.json();
@@ -174,28 +163,26 @@ export const ProfilePage = () => {
       {showOtpModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent} className="glass-panel">
-            <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Verify Contact Info</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>You're changing your email or phone number. Please verify with OTPs.</p>
+            <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Verify Email Address</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>You are updating your email address to <strong>{email}</strong>. Please enter the verification code sent to this email.</p>
             
-            {email !== user.email && (
-              <div style={{ marginBottom: '16px' }}>
-                <label style={styles.fieldLabel}>Email OTP</label>
-                <input value={emailOtp} onChange={e => setEmailOtp(e.target.value)} className="cyber-input" style={styles.inlineInput} placeholder="Enter Email OTP" />
-              </div>
-            )}
-            
-            {phone !== user.phone && (
-              <div style={{ marginBottom: '24px' }}>
-                <label style={styles.fieldLabel}>Phone OTP</label>
-                <input value={phoneOtp} onChange={e => setPhoneOtp(e.target.value)} className="cyber-input" style={styles.inlineInput} placeholder="Enter Phone OTP" />
-              </div>
-            )}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={styles.fieldLabel}>Email OTP</label>
+              <input
+                value={emailOtp}
+                onChange={e => setEmailOtp(e.target.value)}
+                className="cyber-input"
+                style={{ ...styles.inlineInput, letterSpacing: '3px', fontWeight: '600' }}
+                placeholder="Enter 6-digit Email OTP"
+                maxLength={6}
+              />
+            </div>
             
             <div style={{ display: 'flex', gap: '12px' }}>
               <button onClick={handleVerifyOtpAndSave} className="btn-primary" style={{ flex: 1, padding: '10px' }} disabled={verifying}>
                 {verifying ? 'Verifying...' : 'Verify & Save'}
               </button>
-              <button onClick={() => setShowOtpModal(false)} style={{ ...styles.editBtn, flex: 1, background: 'var(--surface-elevated)' }}>
+              <button onClick={() => setShowOtpModal(false)} style={{ ...styles.editBtn, flex: 1, background: 'var(--surface-elevated)', justifyContent: 'center' }}>
                 Cancel
               </button>
             </div>

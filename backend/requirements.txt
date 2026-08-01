@@ -10,4 +10,3 @@ gunicorn
 razorpay
 groq
 waitress==3.0.2
-twilio

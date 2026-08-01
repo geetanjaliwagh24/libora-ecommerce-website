@@ -45,7 +45,7 @@ class BackendTestCase(unittest.TestCase):
         self.seller_unverified = User(email='seller2@test.com', role='seller')
         self.seller_unverified.set_password('seller123')
         
-        self.buyer = User(email='buyer@test.com', role='buyer')
+        self.buyer = User(email='buyer@test.com', role='buyer', address='123 Test Street, Mumbai, MH')
         self.buyer.set_password('buyer123')
         
         db.session.add_all([self.admin, self.seller_verified, self.seller_unverified, self.buyer])
@@ -450,7 +450,6 @@ class BackendTestCase(unittest.TestCase):
             email=email,
             phone=phone,
             email_otp='123456',
-            phone_otp='654321',
             verification_token=token,
             expires_at=datetime.utcnow() + timedelta(minutes=10)
         )
@@ -510,6 +509,61 @@ class BackendTestCase(unittest.TestCase):
             'verification_token': token
         })
         self.assertEqual(response.status_code, 201)
+
+    def test_email_otp_and_seller_signup(self):
+        from app.models import OTPRecord
+        from datetime import datetime, timedelta
+        
+        email = 'newseller@test.com'
+        phone = '+919876543210'
+        
+        # Test verify OTP
+        record = OTPRecord(
+            email=email,
+            phone=phone,
+            email_otp='123456',
+            expires_at=datetime.utcnow() + timedelta(minutes=10)
+        )
+        db.session.add(record)
+        db.session.commit()
+        
+        # Invalid OTP
+        resp = self.client.post('/api/auth/verify-otp', json={
+            'otp_id': record.id,
+            'email_otp': '000000'
+        })
+        self.assertEqual(resp.status_code, 400)
+        
+        # Valid OTP
+        resp = self.client.post('/api/auth/verify-otp', json={
+            'otp_id': record.id,
+            'email_otp': '123456'
+        })
+        self.assertEqual(resp.status_code, 200)
+        res_data = json.loads(resp.data)
+        self.assertIn('verification_token', res_data)
+        token = res_data['verification_token']
+        
+        # Seller signup
+        resp = self.client.post('/api/auth/signup', json={
+            'email': email,
+            'password': 'ValidSellerPass123',
+            'role': 'seller',
+            'phone': phone,
+            'business_name': 'Super Electronics Store',
+            'gstin': '22AAAAA0000A1Z5',
+            'bank_details': 'HDFC Bank, Acct 123456789, HDFC0001234',
+            'verification_token': token
+        })
+        self.assertEqual(resp.status_code, 201)
+        
+        # Verify seller in DB
+        seller_user = User.query.filter_by(email=email).first()
+        self.assertIsNotNone(seller_user)
+        self.assertEqual(seller_user.role, 'seller')
+        self.assertEqual(seller_user.phone, phone)
+        self.assertIsNotNone(seller_user.seller_profile)
+        self.assertEqual(seller_user.seller_profile.business_name, 'Super Electronics Store')
 
 if __name__ == '__main__':
     unittest.main()

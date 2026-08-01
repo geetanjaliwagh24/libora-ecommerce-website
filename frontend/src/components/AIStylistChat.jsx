@@ -140,7 +140,7 @@ export const AIStylistChat = () => {
                   {msg.products && msg.products.length > 0 && (
                     <div style={styles.productCarousel}>
                       {msg.products.map(prod => (
-                        <Link to={`/product/${prod.id}`} key={prod.id} style={styles.productCard}>
+                        <Link to={`/dp/${prod.asin || prod.public_id || prod.id}`} key={prod.id} style={styles.productCard}>
                           <img src={prod.image_url || 'https://via.placeholder.com/80'} alt={prod.name} style={styles.productImg} />
                           <div style={styles.productInfo}>
                             <span style={styles.productName}>{prod.name}</span>

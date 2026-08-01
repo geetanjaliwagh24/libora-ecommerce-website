@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy.orm import joinedload, subqueryload, selectinload
 from app.models import db, Product, Category, Seller, BannerAd, Review, Order, OrderItem, Coupon, CartItem, WishlistItem
 from datetime import datetime
 from app.routes.auth_helper import token_required, role_required
@@ -67,12 +67,7 @@ def get_products():
     page = request.args.get('page', type=int)
     per_page = request.args.get('per_page', type=int)
     
-    # Eager load relationships to avoid N+1 query problem during serialization
-    query = Product.query.options(
-        joinedload(Product.category).joinedload(Category.parent).joinedload(Category.parent),
-        joinedload(Product.seller),
-        subqueryload(Product.reviews)
-    )
+    query = Product.query
     
     if category_id:
         category = db.session.get(Category, category_id)
@@ -104,140 +99,97 @@ def get_products():
     if seller_id:
         query = query.filter(Product.seller_id == seller_id)
         
-    products = query.all()
-    
+    # Enforce safe default pagination parameters
+    page = page or 1
+    per_page = min(per_page or 40, 100)
+
     if search_query:
-        # Clean the query
+        # Search query filtering
         search_query_clean = search_query.lower().strip()
         words = [w for w in search_query_clean.split() if w]
         
+        # Filter with SQL ILIKE for fast response
         if words:
-            import difflib
-            
-            def calculate_relevance(product):
-                name_lower = product.name.lower()
-                desc_lower = (product.description or '').lower()
-                cat_lower = (product.category.name if product.category else '').lower()
-                
-                score = 0.0
-                
-                # 1. Exact phrase match
-                if search_query_clean in name_lower:
-                    score += 1.5
-                elif search_query_clean in desc_lower:
-                    score += 0.8
-                    
-                # 2. Category name exact match
-                if cat_lower and (search_query_clean in cat_lower or cat_lower in search_query_clean):
-                    score += 1.0
-                    
-                # 3. Individual word matches & fuzzy similarity
-                word_matches = 0
-                for word in words:
-                    # Substring match
-                    if word in name_lower:
-                        score += 0.5
-                        word_matches += 1
-                    elif word in desc_lower:
-                        score += 0.25
-                        word_matches += 1
-                    elif cat_lower and word in cat_lower:
-                        score += 0.4
-                        word_matches += 1
-                    else:
-                        # Fuzzy word match using difflib
-                        name_words = name_lower.split()
-                        best_ratio = 0.0
-                        for nw in name_words:
-                            ratio = difflib.SequenceMatcher(None, word, nw).ratio()
-                            if ratio > best_ratio:
-                                best_ratio = ratio
-                        if best_ratio > 0.65:
-                            score += 0.4 * best_ratio
-                            word_matches += 1
-                            
-                        # Fuzzy category match
-                        if cat_lower:
-                            cat_words = cat_lower.split()
-                            best_cat_ratio = 0.0
-                            for cw in cat_words:
-                                ratio = difflib.SequenceMatcher(None, word, cw).ratio()
-                                if ratio > best_cat_ratio:
-                                    best_cat_ratio = ratio
-                            if best_cat_ratio > 0.65:
-                                score += 0.3 * best_cat_ratio
-                                word_matches += 1
-                                
-                # Boost products where at least one word matched
-                if word_matches > 0:
-                    score += 0.2 * (word_matches / len(words))
-                    
-                return score
+            filters = []
+            for w in words:
+                filters.append(Product.name.ilike(f'%{w}%'))
+                filters.append(Product.description.ilike(f'%{w}%'))
+            query = query.filter(db.or_(*filters))
 
-            scored_products = []
-            for p in products:
-                score = calculate_relevance(p)
-                if score > 0.2:  # relevance threshold
-                    scored_products.append((p, score))
-                    
-            # Sort by relevance score descending
-            scored_products.sort(key=lambda x: x[1], reverse=True)
-            products = [sp[0] for sp in scored_products]
-            
-    # Apply sorting in memory to include all calculated fields like average rating
+    # Apply SQL sorting
     if sort == 'price_asc':
-        products = sorted(products, key=lambda p: p.price)
+        query = query.order_by(Product.price.asc())
     elif sort == 'price_desc':
-        products = sorted(products, key=lambda p: p.price, reverse=True)
-    elif sort == 'rating':
-        def avg_rating_key(p):
-            ratings = [r.rating for r in p.reviews]
-            avg = sum(ratings) / len(ratings) if ratings else 0
-            return -avg
-        products = sorted(products, key=avg_rating_key)
+        query = query.order_by(Product.price.desc())
     else:
-        # Default: only sort by created_at if not searching (since search has its own relevance sorting)
-        if not search_query:
-            products = sorted(products, key=lambda p: p.created_at, reverse=True)
-        
-    if page and per_page:
-        total = len(products)
-        start = (page - 1) * per_page
-        end = start + per_page
-        paginated_products = products[start:end]
-        import math
-        pages = math.ceil(total / per_page)
-        
-        return jsonify({
-            'products': [p.to_dict() for p in paginated_products],
-            'page': page,
-            'per_page': per_page,
-            'total': total,
-            'pages': pages,
-            'has_next': page < pages,
-            'has_prev': page > 1
-        }), 200
-        
-    return jsonify([p.to_dict() for p in products]), 200
+        query = query.order_by(Product.created_at.desc(), Product.id.desc())
 
-@products_bp.route('/<int:product_id>', methods=['GET'])
-def get_product(product_id):
-    product = db.get_or_404(Product, product_id)
+    # Ultra-fast SQL count
+    total = query.with_entities(db.func.count(Product.id)).order_by(None).scalar() or 0
+    import math
+    pages = max(math.ceil(total / per_page), 1)
+    
+    # Fetch only the paginated product IDs first
+    id_rows = query.with_entities(Product.id).offset((page - 1) * per_page).limit(per_page).all()
+    page_ids = [r[0] for r in id_rows]
+
+    # Eager load relationships ONLY for the 40 items on this page
+    if page_ids:
+        items = Product.query.filter(Product.id.in_(page_ids)).options(
+            joinedload(Product.category).joinedload(Category.parent).joinedload(Category.parent),
+            joinedload(Product.seller),
+            selectinload(Product.reviews)
+        ).all()
+        id_map = {p.id: p for p in items}
+        paginated_items = [id_map[pid] for pid in page_ids if pid in id_map]
+    else:
+        paginated_items = []
+
+    return jsonify({
+        'products': [p.to_dict() for p in paginated_items],
+        'page': page,
+        'per_page': per_page,
+        'total': total,
+        'pages': pages,
+        'has_next': page < pages,
+        'has_prev': page > 1
+    }), 200
+
+@products_bp.route('/<product_identifier>', methods=['GET'])
+@products_bp.route('/dp/<product_identifier>', methods=['GET'])
+def get_product(product_identifier):
+    from app.utils_encoder import decode_product_id
+    real_id = decode_product_id(product_identifier)
+    if not real_id:
+        return jsonify({'message': 'Invalid product identifier or product not found'}), 404
+
+    product = db.session.get(Product, real_id)
+    if not product:
+        return jsonify({'message': 'Product not found'}), 404
+
     product_dict = product.to_dict()
     
     if product.group_id:
         variants = Product.query.filter(Product.group_id == product.group_id, Product.id != product.id).all()
         product_dict['variants'] = [{
             'id': v.id,
+            'public_id': v.public_id,
+            'asin': v.public_id,
             'color_name': v.color_name,
             'image_url': v.images[0] if v.images else None
         } for v in variants]
         
     return jsonify(product_dict), 200
 
-@products_bp.route('/<int:product_id>/recommendations', methods=['GET'])
-def get_recommendations(product_id):
-    product = db.session.get(Product, product_id)
+@products_bp.route('/<product_identifier>/recommendations', methods=['GET'])
+@products_bp.route('/dp/<product_identifier>/recommendations', methods=['GET'])
+def get_recommendations(product_identifier):
+    from app.utils_encoder import decode_product_id
+    real_id = decode_product_id(product_identifier)
+    if not real_id:
+        return jsonify({'message': 'Product not found'}), 404
+
+    product = db.session.get(Product, real_id)
     if not product:
         return jsonify({'message': 'Product not found'}), 404
         

@@ -61,14 +61,15 @@ export const BuyerWishlist = () => {
           </Link>
         </div>
       ) : (
-        <div style={styles.grid}>
+        <div style={styles.grid} className="product-grid">
           {wishlist.map(item => {
-            const hasSizes = item.sizes && Object.keys(item.sizes).length > 0;
-            const totalStock = hasSizes ? Object.values(item.sizes).reduce((a, b) => a + b, 0) : (item.stock || 0);
+            const hasSizes = item.sizes && typeof item.sizes === 'object' && Object.keys(item.sizes).length > 0;
+            const sizesStockSum = hasSizes ? Object.values(item.sizes).reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+            const totalStock = (hasSizes && sizesStockSum > 0) ? sizesStockSum : (item.stock !== undefined && item.stock !== null ? Number(item.stock) : 0);
             const isOutOfStock = totalStock <= 0;
             return (
             <div key={item.id} className="cyber-card" style={styles.card}>
-              <Link to={`/product/${item.product_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link to={`/dp/${item.asin || item.public_id || item.product_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={styles.imageWrapper}>
                   <img
                     src={item.image_url || 'https://via.placeholder.com/200x200'}

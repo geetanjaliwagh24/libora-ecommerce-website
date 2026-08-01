@@ -48,10 +48,5 @@ class Config:
     FRAUD_PRICE_ANOMALY_THRESHOLD = 0.25  # Flag if price is < 25% of sub-category median
     FRAUD_HIGH_VOLUME_THRESHOLD = 10000.0 # Flag cumulative transactions over this value from unverified sellers
 
-    # Twilio SMS configuration
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
-
 
 

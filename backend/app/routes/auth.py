@@ -7,8 +7,6 @@ from datetime import datetime, timedelta
 import random
 import uuid
 import json
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
 import smtplib
 from email.message import EmailMessage
 
@@ -50,31 +48,6 @@ def send_deletion_email(user_email):
     body = "Your account has been permanently deleted. Sad to see you go!"
     send_real_email(user_email, subject, body)
 
-def send_twilio_sms(phone, otp):
-    try:
-        account_sid = current_app.config.get('TWILIO_ACCOUNT_SID')
-        auth_token = current_app.config.get('TWILIO_AUTH_TOKEN')
-        twilio_number = current_app.config.get('TWILIO_PHONE_NUMBER')
-
-        if not all([account_sid, auth_token, twilio_number]):
-            print("Twilio credentials missing, skipping real SMS sending.")
-            return False
-
-        client = Client(account_sid, auth_token)
-        message = client.messages.create(
-            body=f"Your Libora verification code is {otp}",
-            from_=twilio_number,
-            to=phone
-        )
-        print(f"Twilio SMS sent successfully, SID: {message.sid}")
-        return True
-    except TwilioRestException as e:
-        print(f"Twilio Error: {e}")
-        return False
-    except Exception as e:
-        print(f"Error sending Twilio SMS: {str(e)}")
-        return False
-
 
 
 @auth_bp.route('/send-otp', methods=['POST'])
@@ -85,8 +58,8 @@ def send_otp():
     phone = data.get('phone')
     otp_id = data.get('otp_id')
     
-    if not email and not phone:
-        return jsonify({'message': 'Email or phone is required'}), 400
+    if not email:
+        return jsonify({'message': 'Email address is required'}), 400
         
     record = None
     if otp_id:
@@ -99,23 +72,23 @@ def send_otp():
         )
         db.session.add(record)
     
-    if email:
-        email_otp = str(random.randint(100000, 999999))
-        record.email = email
-        record.email_otp = email_otp
-        success, email_err = send_real_email(email, "Your Libora Verification Code", f"Your Libora verification code is {email_otp}")
-        if not success:
-            db.session.rollback()
-            return jsonify({'message': f'Failed to send Email OTP: {email_err}'}), 500
-            
+    email_otp = str(random.randint(100000, 999999))
+    record.email = email
+    record.email_otp = email_otp
     if phone:
-        phone_otp = str(random.randint(100000, 999999))
         record.phone = phone
-        record.phone_otp = phone_otp
-        send_twilio_sms(phone, phone_otp)
+        
+    success, email_err = send_real_email(
+        email, 
+        "Your Libora Verification Code", 
+        f"Your Libora verification code is {email_otp}"
+    )
+    if not success:
+        db.session.rollback()
+        return jsonify({'message': f'Failed to send Email OTP: {email_err}'}), 500
         
     db.session.commit()
-    return jsonify({'message': 'OTP sent successfully', 'otp_id': record.id}), 200
+    return jsonify({'message': 'Verification code sent to your email', 'otp_id': record.id}), 200
 
 @auth_bp.route('/verify-otp', methods=['POST'])
 @limiter.limit("10 per minute")
@@ -123,10 +96,11 @@ def verify_otp():
     data = request.get_json() or {}
     otp_id = data.get('otp_id')
     email_otp = data.get('email_otp')
-    phone_otp = data.get('phone_otp')
     
     if not otp_id:
         return jsonify({'message': 'OTP ID missing'}), 400
+    if not email_otp:
+        return jsonify({'message': 'Email OTP is required'}), 400
         
     record = db.session.get(OTPRecord, otp_id)
     if not record:
@@ -135,15 +109,11 @@ def verify_otp():
     if record.expires_at < datetime.utcnow():
         return jsonify({'message': 'OTP expired'}), 400
         
-    if email_otp and record.email_otp != email_otp:
+    if record.email_otp != email_otp:
         return jsonify({'message': 'Invalid Email OTP'}), 400
         
-    if phone_otp and record.phone_otp != phone_otp:
-        return jsonify({'message': 'Invalid Phone OTP'}), 400
-        
-    # Mark as verified
-    if email_otp: record.email_otp = None
-    if phone_otp: record.phone_otp = None
+    # Mark email as verified
+    record.email_otp = None
         
     verification_token = record.verification_token or str(uuid.uuid4())
     record.verification_token = verification_token
@@ -354,9 +324,9 @@ def update_profile(current_user):
         new_email = data.get('email')
         verification_token = data.get('verification_token')
         
-        if (new_phone and new_phone != current_user.phone) or (new_email and new_email != current_user.email):
+        if new_email and new_email != current_user.email:
             if not verification_token:
-                return jsonify({'message': 'OTP verification required to change email or phone'}), 400
+                return jsonify({'message': 'OTP verification required to change email address'}), 400
                 
             otp_record = OTPRecord.query.filter_by(
                 verification_token=verification_token
@@ -365,19 +335,15 @@ def update_profile(current_user):
             if not otp_record or otp_record.expires_at < datetime.utcnow():
                 return jsonify({'message': 'Invalid or expired verification session.'}), 400
                 
-            if new_phone and new_phone != current_user.phone:
-                if otp_record.phone != new_phone:
-                    return jsonify({'message': 'Phone number in OTP verification does not match'}), 400
-            if new_email and new_email != current_user.email:
-                if otp_record.email != new_email:
-                    return jsonify({'message': 'Email in OTP verification does not match'}), 400
+            if otp_record.email != new_email:
+                return jsonify({'message': 'Email in OTP verification does not match'}), 400
         
         if new_phone: current_user.phone = new_phone
         if new_email: current_user.email = new_email
         if data.get('address'): current_user.address = data['address']
         if data.get('name') and hasattr(current_user, 'name'): current_user.name = data['name']
         db.session.commit()
-        return jsonify({'message': 'Profile updated', 'user': current_user.to_dict()}), 200
+        return jsonify({'message': 'Profile updated successfully', 'user': current_user.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': str(e)}), 500

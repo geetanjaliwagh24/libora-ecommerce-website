@@ -16,8 +16,9 @@ export const SellerHandbook = () => {
           <ol style={{ paddingLeft: '20px' }}>
             <li>Navigate to the <strong>Libora Sign-Up Page</strong>.</li>
             <li>Select <strong>"Register as a Seller"</strong>.</li>
-            <li>Fill in your business details, email, and contact information.</li>
-            <li>Once submitted, your account may require approval from the Marketplace Admin. You will receive an SMS/Email notification (via Twilio) once your account is active.</li>
+            <li>Enter your phone number and email address, then verify your account with the secure Email OTP.</li>
+            <li>Fill in your business details, password, and KYC information.</li>
+            <li>Once submitted, your account may require approval from the Marketplace Admin. You will receive an Email notification once your account is active.</li>
           </ol>
           <h3 style={{ marginTop: '15px' }}>Logging In</h3>
           <p>Once approved, log in using your credentials to access the <strong>Seller Dashboard</strong>—your central hub for managing your entire business on Libora.</p>
