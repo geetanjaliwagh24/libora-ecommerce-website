@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Store, UploadCloud, AlertCircle, ShieldCheck, CheckCircle2, Pencil, X, Package, MessageSquare } from 'lucide-react';
+import { Store, UploadCloud, AlertCircle, ShieldCheck, CheckCircle2, Pencil, X, Package, MessageSquare, Eye, Search } from 'lucide-react';
 import { LineChart, BarChart } from '../components/CustomCharts';
 import { API_URL } from '../config';
 import { ChatModal } from '../components/ChatModal';
@@ -54,6 +54,9 @@ export const SellerDashboard = () => {
   const [editSuccess, setEditSuccess] = useState(false);
   const [editError, setEditError] = useState('');
   const [showSellerSizeGuide, setShowSellerSizeGuide] = useState(false);
+
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogPage, setCatalogPage] = useState(1);
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1315,51 +1318,145 @@ export const SellerDashboard = () => {
 
       {/* Product Listings Inventory Section */}
       <div style={{ ...styles.creatorPanel, marginTop: '30px' }} className="glass-panel">
-        <h2 style={styles.panelTitle}>Active Catalog Inventory ({products.length})</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <h2 style={{ ...styles.panelTitle, margin: 0 }}>Active Catalog Inventory ({products.length})</h2>
+          <a
+            href={`/?seller_id=${user?.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 'bold' }}
+          >
+            <Eye size={16} /> View Storefront on Live Site
+          </a>
+        </div>
+
         {products.length > 0 ? (
-          <div style={styles.catalogTableContainer} className="table-responsive">
-            <table style={styles.table}>
-              <thead>
-                <tr style={styles.tr}>
-                  <th style={styles.th}>Image</th>
-                  <th style={styles.th}>Product Title</th>
-                  <th style={styles.th}>Category</th>
-                  <th style={styles.th}>Price</th>
-                  <th style={styles.th}>Stock</th>
-                  <th style={styles.th}>Rating</th>
-                  <th style={styles.th}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} style={styles.tr}>
-                    <td style={styles.td}>
-                      <img src={p.image_url || 'https://via.placeholder.com/50'} alt={p.name} style={styles.tableImg} />
-                    </td>
-                    <td style={styles.td}><b>{p.name}</b></td>
-                    <td style={styles.td}>{p.category_name}</td>
-                    <td style={styles.td}>₹{p.price.toLocaleString('en-IN')}</td>
-                    <td style={styles.td}>
-                      <span style={{ color: p.stock < 5 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: 'bold' }}>
-                        {p.stock}
+          <div>
+            {/* Search Bar */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Search catalog by title or category..."
+                  value={catalogSearch}
+                  onChange={(e) => { setCatalogSearch(e.target.value); setCatalogPage(1); }}
+                  className="cyber-input"
+                  style={{ paddingLeft: '36px', width: '100%' }}
+                />
+              </div>
+            </div>
+
+            {(() => {
+              const filtered = products.filter(p => 
+                !catalogSearch || 
+                p.name.toLowerCase().includes(catalogSearch.toLowerCase()) || 
+                (p.category_name && p.category_name.toLowerCase().includes(catalogSearch.toLowerCase()))
+              );
+              const perPage = 15;
+              const totalPages = Math.ceil(filtered.length / perPage) || 1;
+              const currentPage = Math.min(catalogPage, totalPages);
+              const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+
+              return (
+                <>
+                  <div style={styles.catalogTableContainer} className="table-responsive">
+                    <table style={styles.table}>
+                      <thead>
+                        <tr style={styles.tr}>
+                          <th style={styles.th}>Image</th>
+                          <th style={styles.th}>Product Title</th>
+                          <th style={styles.th}>Category</th>
+                          <th style={styles.th}>Price</th>
+                          <th style={styles.th}>Stock</th>
+                          <th style={styles.th}>Rating</th>
+                          <th style={styles.th}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginated.length > 0 ? paginated.map((p) => (
+                          <tr key={p.id} style={styles.tr}>
+                            <td style={styles.td}>
+                              <img src={p.image_url || 'https://via.placeholder.com/50'} alt={p.name} style={styles.tableImg} />
+                            </td>
+                            <td style={styles.td}><b>{p.name}</b></td>
+                            <td style={styles.td}>{p.category_name}</td>
+                            <td style={styles.td}>₹{p.price.toLocaleString('en-IN')}</td>
+                            <td style={styles.td}>
+                              <span style={{ color: p.stock < 5 ? 'var(--danger)' : 'var(--text-primary)', fontWeight: 'bold' }}>
+                                {p.stock}
+                              </span>
+                            </td>
+                            <td style={styles.td}>★ {p.rating.toFixed(1)}</td>
+                            <td style={styles.td}>
+                              <div style={{ display: 'flex', gap: '6px' }}>
+                                <button
+                                  onClick={() => handleOpenEditModal(p)}
+                                  className="btn-secondary"
+                                  style={styles.editBtn}
+                                  title="Edit Product"
+                                >
+                                  <Pencil size={12} style={{ marginRight: '4px' }} />
+                                  Edit
+                                </button>
+                                <a
+                                  href={`/dp/${p.asin || p.public_id || p.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn-secondary"
+                                  style={{ ...styles.editBtn, textDecoration: 'none' }}
+                                  title="View on Live Site"
+                                >
+                                  <Eye size={12} style={{ marginRight: '4px' }} />
+                                  View
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
+                              No products found matching "{catalogSearch}"
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        Showing {((currentPage - 1) * perPage) + 1}–{Math.min(currentPage * perPage, filtered.length)} of {filtered.length} products
                       </span>
-                    </td>
-                    <td style={styles.td}>★ {p.rating.toFixed(1)}</td>
-                    <td style={styles.td}>
-                      <button
-                        onClick={() => handleOpenEditModal(p)}
-                        className="btn-secondary"
-                        style={styles.editBtn}
-                        title="Edit Product"
-                      >
-                        <Pencil size={12} style={{ marginRight: '4px' }} />
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          disabled={currentPage <= 1}
+                          onClick={() => setCatalogPage(p => Math.max(1, p - 1))}
+                          className="btn-secondary"
+                          style={{ padding: '6px 12px', opacity: currentPage <= 1 ? 0.5 : 1 }}
+                        >
+                          ‹ Prev
+                        </button>
+                        <span style={{ padding: '6px 12px', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <button
+                          disabled={currentPage >= totalPages}
+                          onClick={() => setCatalogPage(p => Math.min(totalPages, p + 1))}
+                          className="btn-secondary"
+                          style={{ padding: '6px 12px', opacity: currentPage >= totalPages ? 0.5 : 1 }}
+                        >
+                          Next ›
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ) : (
           <div style={styles.noOrders}>
